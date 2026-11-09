@@ -1,8 +1,8 @@
 EE_BIN = hlps2.elf
 DVP_AS ?= dvp-as
-EE_OBJS = src/main.o src/vu1_probe.o src/vu1_probe_c.o src/vu1_runtime.o
+EE_OBJS = src/main.o src/vu1_probe.o src/vu1_probe_c.o
 EE_CFLAGS += -O2 -G0 -Wall -Wextra -Iinclude
-EE_LIBS += -ldebug -ldraw -lgraph -ldma -lpacket -lpacket2 -lm
+EE_LIBS += -ldebug -ldraw -lgraph -ldma -lpacket -lm
 
 src/vu1_probe.o: src/vu1_probe.vsm
 	$(DVP_AS) $< -o $@
