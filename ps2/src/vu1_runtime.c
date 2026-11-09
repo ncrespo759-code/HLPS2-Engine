@@ -1,14 +1,13 @@
 /*
  * Isolated VU1 execution test.
  *
- * Uses the PS2SDK packet2 sequence from ee/draw/samples/vu1:
- * upload with TTE enabled, wait for VIF1 DMA, then start with MSCAL
- * and wait for FLUSHE. This test does not touch the stable cube ELF.
+ * Follow the PS2SDK ee/draw/samples/vu1 packet sequence:
+ * upload the microprogram, wait for VIF1 DMA, then submit a small
+ * chain containing MSCAL and an END tag. No GIF/GS rendering here.
  */
 #include <tamtypes.h>
 #include <dma.h>
 #include <packet2.h>
-#include <packet2_chain.h>
 #include <packet2_vif.h>
 #include <packet2_utils.h>
 
@@ -17,9 +16,12 @@ extern u32 hlps2_vu1_probe_CodeEnd[];
 
 static int upload_probe(void)
 {
+    u32 packet_size;
     packet2_t *packet;
 
-    packet = packet2_create(8, P2_TYPE_NORMAL, P2_MODE_CHAIN, 1);
+    packet_size = packet2_utils_get_packet_size_for_program(
+        hlps2_vu1_probe_CodeStart, hlps2_vu1_probe_CodeEnd) + 1;
+    packet = packet2_create(packet_size, P2_TYPE_NORMAL, P2_MODE_CHAIN, 1);
     if (packet == 0)
         return -1;
 
@@ -37,16 +39,13 @@ static int execute_probe(void)
 {
     packet2_t *packet;
 
-    packet = packet2_create(8, P2_TYPE_NORMAL, P2_MODE_CHAIN, 1);
+    /* Same minimal launch sequence used by the PS2SDK VU1 sample. */
+    packet = packet2_create(2, P2_TYPE_NORMAL, P2_MODE_CHAIN, 1);
     if (packet == 0)
         return -1;
 
     packet2_utils_vu_add_start_program(packet, 0);
-    packet2_chain_open_cnt(packet, 0, 0, 0);
-    packet2_vif_flushe(packet, 0);
-    packet2_chain_close_tag(packet);
     packet2_utils_vu_add_end_tag(packet);
-
     dma_channel_send_packet2(packet, DMA_CHANNEL_VIF1, 1);
     dma_channel_wait(DMA_CHANNEL_VIF1, 0);
     packet2_free(packet);
