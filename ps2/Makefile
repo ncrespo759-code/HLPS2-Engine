@@ -10,11 +10,16 @@ src/vu1_probe.o: src/vu1_probe.vsm
 src/vu1_probe_c.o: src/vu1_probe.c
 	$(EE_CC) $(EE_CFLAGS) -c $< -o $@
 
-.PHONY: all clean
+.PHONY: all clean vu1-test
 all: $(EE_BIN)
 
+# Build a separate test ELF. The stable cube target never links or calls
+# the experimental VIF1/VU1 runtime.
+vu1-test:
+	$(MAKE) EE_BIN=hlps2-vu1-test.elf EE_OBJS="src/vu1_test_main.o src/vu1_runtime.o src/vu1_probe.o src/vu1_probe_c.o" EE_LIBS="$(EE_LIBS) -lpacket2" all
+
 clean:
-	$(RM) $(EE_BIN) $(EE_OBJS)
+	$(RM) $(EE_BIN) hlps2-vu1-test.elf $(EE_OBJS) src/vu1_test_main.o src/vu1_runtime.o
 
 # Define EE_CC, EE_LD and the rest of the PS2 toolchain commands.
 include $(PS2SDK)/Defs.make
