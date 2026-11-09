@@ -18,6 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install build utilities
+        run: apk add --no-cache make
+
       - name: Configure PS2 toolchain
         shell: sh
         run: |
