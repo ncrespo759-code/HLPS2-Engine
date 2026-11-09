@@ -4,7 +4,8 @@ EE_OBJS = src/main.o src/vu1_probe.o
 EE_CFLAGS += -O2 -G0 -Wall -Wextra -Iinclude
 EE_LIBS += -ldebug -ldraw -lgraph -ldma -lpacket -lm
 
-src/vu1_probe.o: src/vu1_probe.vsm\n\t$(DVP_AS) $< -o $@
+src/vu1_probe.o: src/vu1_probe.vsm
+	$(DVP_AS) $< -o $@
 
 .PHONY: all clean
 all: $(EE_BIN)
