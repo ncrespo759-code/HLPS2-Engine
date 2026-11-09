@@ -1,6 +1,7 @@
 EE_BIN = hlps2.elf
 EE_OBJS = src/main.o
 EE_CFLAGS += -O2 -G0 -Wall -Wextra -Iinclude
+EE_LIBS += -ldebug
 
 .PHONY: all clean
 all: $(EE_BIN)
