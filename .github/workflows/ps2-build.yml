@@ -35,6 +35,9 @@ jobs:
           command -v make
           test -f "$PS2SDK/samples/Makefile.eeglobal"
 
+      - name: Test host-side VTF asset converter
+        run: python3 tools/asset_pipeline/vtf_to_hlps2.py --self-test
+
       - name: Build stable EE cube ELF
         run: make -C ps2 clean all
 
