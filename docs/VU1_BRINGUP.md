@@ -1,57 +1,56 @@
 # VU1 bring-up plan
 
-## Current verified state
+## Verified state (2026-11-09)
 
-- The EE bootstrap initializes the GS and draws the rotating CPU-side cube.
-- `dvp-as` assembles `ps2/src/vu1_probe.vsm`; its `.vudata` symbols are linked into `hlps2.elf`.
-- The current probe is a terminating NOP program. It is **not uploaded to VU1 or executed**.
-- Keep the CPU cube intact until a separate VU1-rendered primitive is visibly verified in PCSX2 and, later, on SCPH-90001 hardware.
+- The stable `hlps2.elf` initializes the GS and draws the rotating 3D cube. Its vertex transform, projection, face culling and painter sorting are still CPU/EE-side.
+- `hlps2-vu1-test.elf` uploads and starts an isolated VU1 microprogram. The user confirmed the VU1 probe completion message in PCSX2.
+- `hlps2-vu1-triangle-test.elf` uploads a prebuilt six-qword GIF packet into VU1 data memory. The VU1 microprogram executes `XGKICK`; the user confirmed the cyan triangle and the diagnostic text are visible.
+- Important limitation: the triangle test does **not** transform vertices. The EE prebuilds the final GS packet, and VU1 only forwards it to the GS.
+- GitHub Actions run #62 passed all asset-pipeline self-tests and built/verified the stable cube ELF, isolated VU1 test ELF, and VU1-to-GS triangle ELF.
 
-## Required VU1 execution sequence
+Keep the cube and current triangle ELF as known-good reference tests. New VU1 geometry work must be a separate target until it is visibly confirmed in PCSX2.
 
-VU1 has private micro-memory and data memory. The EE communicates with it through VIF1; a VU1 program can submit its output to the GS through GIF PATH1 using `XGKICK`.
+## Next milestone: VU1 transforms three vertices
 
-The runtime path should be implemented in isolated stages:
+The next test should be a separate `hlps2-vu1-transform-test.elf`:
 
-1. Initialize DMA channel VIF1 independently from the existing GIF channel.
-2. Build a correctly aligned VIF1 DMA packet that uploads the assembled microprogram with the VIF `MPG` command.
-3. Upload a small, fixed input block to VU1 data memory using `UNPACK`.
-4. Start the program with `MSCAL` at its VU micro-memory address.
-5. Wait for VIF1/VU1 completion using the appropriate VIF flush/fence before reusing packet or input memory.
-6. Only after the execution-only test is stable, make the program emit a GS packet with `XGKICK` and verify a visible primitive.
-7. Keep the CPU cube as the fallback while comparing output and timing.
+1. EE initializes VIF1 and uploads a small VU1 microprogram with the PS2SDK packet2 MPG helper.
+2. EE UNPACKs three source vertices and a compact transform/projection constant block into VU1 data memory.
+3. VU1 loads the vertices, performs an actual vector transform and perspective projection, converts screen coordinates to GS fixed-point format, and writes a packed GIF packet in VU1 data memory.
+4. VU1 sends that generated packet to the GS with `XGKICK`.
+5. The visible output must change when the EE changes the input rotation angle. The EE must not precompute the final screen-space XYZ coordinates or build the final GIF packet.
+6. Keep a fixed-angle mode first for deterministic validation; add animation only after the fixed output is correct.
 
-## VIF commands relevant to this path
+A successful assembler/linker run is not runtime proof. Confirm the changed geometry visually in PCSX2 before calling this milestone complete.
 
-- `MPG` (`0x4A`): uploads microinstructions to VU micro-memory.
-- `UNPACK` (command family `0x60+`): transfers vertex/input data to VU data memory.
-- `MSCAL` (`0x14`): starts a microprogram at the specified instruction address.
-- `FLUSHE` (`0x10`): waits for VU execution to finish.
-- `FLUSH` (`0x11`): additionally waits for PATH1/PATH2 transfers to finish.
-- `FLUSHA` (`0x13`): stronger VIF1 synchronization, including pending PATH3 requests.
+## Reference implementation notes
 
-PS2SDK provides packet2 helpers such as `packet2_vif_add_micro_program`, `packet2_vif_mscal`, `packet2_vif_flush`, and UNPACK helpers. Prefer these helpers if the project adopts packet2; otherwise document and test every manually encoded VIF word and alignment rule.
+The separate `retcon26/PS2-GMOD` project contains useful VU1 renderer architecture in `ps2/vu1_map.vsm`, `ps2/vu1_lit.vsm`, and `ps2/gu.c`. Its map path demonstrates a practical data layout:
 
-## Safety and correctness rules
+- A matrix/constants block at the beginning of VU1 data memory.
+- A GIF tag and primitive metadata prepared for the output stream.
+- Input vertex data in a separate region so VU1 output does not overwrite input still being read.
+- VU1 vector instructions perform transform/projection and write ST/RGBAQ/XYZ data.
+- A final `XGKICK` submits the VU-generated GIF packet.
 
-- Do not assume a successful `dvp-as` build proves runtime execution.
-- Do not overwrite VU1 micro-memory while a program is running.
-- Do not reuse DMA source buffers until the relevant DMA/VIF completion has been observed.
-- Keep VIF1 and GIF DMA initialization/waits separate; do not change the working GIF path as part of this test.
-- Respect VIF MPG limits and split larger microprogram uploads into legal chunks.
-- Keep the first VU1 test deterministic: fixed input, fixed output, no textures, no game assets, no dynamic allocation.
-- A successful CI build is only a build milestone. Runtime success requires a visible PCSX2 result and explicit confirmation.
+Use this as an architectural reference only. Do not copy the PSP game engine, PSP SDK, or its asset/runtime assumptions into HLPS2-Engine. The HLPS2 implementation must use PS2SDK VIF1/VU1/GS interfaces and preserve the existing working tests.
+
+## VIF/VU1 rules
+
+- `MPG` uploads VU microinstructions; `UNPACK` uploads data; `MSCAL` starts a microprogram.
+- `FLUSHE` waits for VU execution; `FLUSH` additionally waits for PATH1/PATH2 transfers; use the synchronization level required before reusing buffers.
+- Respect VU1's micro-memory and data-memory limits and MPG transfer limits.
+- Keep VIF1 and GIF DMA synchronization separate.
+- Do not overwrite VU1 micro-memory or data buffers while VU1/GIF is consuming them.
+- The EE must not build the final output GIF packet in the transform test; otherwise the test would only repeat the current forwarding test.
+
+## Asset pipeline status
+
+Host-side VTF conversion and Source MDL header/inventory checks are separate from rendering. They do not yet mean Source models or textures are loaded by the PS2 runtime. Actual asset conversion requires the original asset ZIP and matching model companion files where applicable.
 
 ## References
 
-- PS2SDK VIF command definitions and packet helpers:
-  - https://ps2dev.github.io/ps2sdk/group__packet2__vif.html
-  - https://ps2dev.github.io/ps2sdk/vif__codes_8h.html
-  - https://ps2dev.github.io/ps2sdk/dma_8h.html
-- PS2 VIF/VU1 hardware behavior:
-  - https://israpps.github.io/ps2tek/
-  - https://docs.alexrp.com/mips/ee_vu.pdf
-- Practical VU1 rendering sequence and PATH1/XGKICK example:
-  - https://glampert.github.io/2016/01-22/q2ps2-hardware-accelerated-vertex-xform/
-
-These references inform the implementation plan; this document does not claim that the project has implemented or verified VU1 execution.
+- PS2SDK VIF packet helpers: https://ps2dev.github.io/ps2sdk/group__packet2__vif.html
+- PS2SDK VIF command definitions: https://ps2dev.github.io/ps2sdk/vif__codes_8h.html
+- PS2 hardware notes: https://israpps.github.io/ps2tek/
+- VU1 rendering architecture reference: https://github.com/retcon26/PS2-GMOD/blob/main/ps2/vu1_map.vsm
