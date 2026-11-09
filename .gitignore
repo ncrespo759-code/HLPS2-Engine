@@ -1,0 +1,12 @@
+# PS2 build output
+*.elf
+*.o
+*.a
+*.irx
+*.map
+*.lst
+
+# Host build output
+build/
+dist/
+.cache/
