@@ -83,3 +83,17 @@ python3 tools/asset_pipeline/inspect_idst.py --self-test
 This is header validation only. It does not claim to convert or render the
 model; mesh decoding and PS2-friendly reduction follow after the exact model
 and its companion files are identified.
+
+
+## Asset pack inventory
+
+`scan_source_assets.py` scans a folder or ZIP without extracting it. It
+groups `.mdl` files with matching `.vvd` and `.dx90.vtx` (or `.vtx`)
+companions, and lists `.vtf`/`.vmt` textures. It does not decode model
+meshes or trust asset contents.
+
+```sh
+python3 tools/asset_pipeline/scan_source_assets.py path/to/asset-pack.zip
+python3 tools/asset_pipeline/scan_source_assets.py path/to/extracted-assets --json
+python3 tools/asset_pipeline/scan_source_assets.py --self-test
+```
