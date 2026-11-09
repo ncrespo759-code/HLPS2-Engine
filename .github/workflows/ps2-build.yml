@@ -35,15 +35,23 @@ jobs:
           command -v make
           test -f "$PS2SDK/samples/Makefile.eeglobal"
 
-      - name: Build bootstrap ELF
+      - name: Build stable EE cube ELF
         run: make -C ps2 clean all
 
-      - name: Verify ELF
+      - name: Verify stable ELF
         run: test -s ps2/hlps2.elf
 
-      - name: Publish ELF
+      - name: Build isolated VU1 test ELF
+        run: make -C ps2 vu1-test
+
+      - name: Verify isolated VU1 ELF
+        run: test -s ps2/hlps2-vu1-test.elf
+
+      - name: Publish PS2 ELFs
         uses: actions/upload-artifact@v4
         with:
-          name: hlps2-bootstrap-elf
-          path: ps2/hlps2.elf
+          name: hlps2-ps2-elfs
+          path: |
+            ps2/hlps2.elf
+            ps2/hlps2-vu1-test.elf
           if-no-files-found: error
