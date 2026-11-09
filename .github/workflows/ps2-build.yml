@@ -25,11 +25,13 @@ jobs:
         shell: sh
         run: |
           export PATH="$PS2DEV/ee/bin:$PS2DEV/dvp/bin:$PS2DEV/bin:$PS2SDK/bin:$PATH"
-          echo "$PS2DEV/ee/bin" >> "$GITHUB_PATH"\n          echo "$PS2DEV/dvp/bin" >> "$GITHUB_PATH"
+          echo "$PS2DEV/ee/bin" >> "$GITHUB_PATH"
+          echo "$PS2DEV/dvp/bin" >> "$GITHUB_PATH"
           echo "$PS2DEV/bin" >> "$GITHUB_PATH"
           echo "$PS2SDK/bin" >> "$GITHUB_PATH"
           test -n "$PS2SDK"
-          command -v mips64r5900el-ps2-elf-gcc\n          command -v dvp-as
+          command -v mips64r5900el-ps2-elf-gcc
+          command -v dvp-as
           command -v make
           test -f "$PS2SDK/samples/Makefile.eeglobal"
 
