@@ -223,7 +223,7 @@ int main(void)
 
     init_scr();
     scr_printf("HLPS2-Engine: native EE 3D cube test\n");
-    scr_printf("VU1 microcode linked: %u bytes\\n",
+    scr_printf("VU1 microcode linked: %u bytes\n",
                hlps2_vu1_probe_size());
 
     dma_channel_initialize(DMA_CHANNEL_GIF, 0, 0);
