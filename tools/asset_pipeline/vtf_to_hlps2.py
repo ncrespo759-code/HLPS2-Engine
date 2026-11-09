@@ -90,9 +90,9 @@ def decode_vtf(path: Path) -> tuple[int, int, bytes, int]:
     frames = struct.unpack_from("<H", data, 24)[0]
     high_fmt = struct.unpack_from("<i", data, 52)[0]
     mip_count = data[56]
-    low_fmt = struct.unpack_from("<i", data, 60)[0]
-    low_w, low_h = data[64], data[65]
-    depth = struct.unpack_from("<H", data, 66)[0] if minor >= 2 and header_size >= 68 else 1
+    low_fmt = struct.unpack_from("<i", data, 57)[0]
+    low_w, low_h = data[61], data[62]
+    depth = struct.unpack_from("<H", data, 63)[0] if minor >= 2 and header_size >= 65 else 1
 
     if not width or not height or width > 1024 or height > 1024:
         raise ValueError(f"texture dimensions {width}x{height} are outside 1..1024")
@@ -173,7 +173,7 @@ def self_test() -> None:
         struct.pack_into("<HHIHH", header, 16, 2, 2, 0, 1, 0)
         struct.pack_into("<i", header, 52, FMT_RGBA8888)
         header[56] = 1
-        struct.pack_into("<i", header, 60, -1)
+        struct.pack_into("<i", header, 57, -1)
         source.write_bytes(header + bytes([
             255, 0, 0, 255, 0, 255, 0, 255,
             0, 0, 255, 255, 255, 255, 255, 0,
@@ -191,7 +191,7 @@ def self_test() -> None:
         struct.pack_into("<HHIHH", dxt, 16, 4, 4, 0, 1, 0)
         struct.pack_into("<i", dxt, 52, FMT_DXT1)
         dxt[56] = 1
-        struct.pack_into("<i", dxt, 60, -1)
+        struct.pack_into("<i", dxt, 57, -1)
         dxt.extend(struct.pack("<HHI", 0xF800, 0x0000, 0))
         source.write_bytes(dxt)
         convert(source, target)
