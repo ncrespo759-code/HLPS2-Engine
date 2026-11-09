@@ -40,6 +40,7 @@
 ## Compilar
 
 Con PS2SDK instalado y `PS2SDK` apuntando a su directorio. El compilador EE de la toolchain actual se llama `mips64r5900el-ps2-elf-gcc`; el workflow configura `PATH` para incluir `$PS2DEV/ee/bin`:
+El contenedor instala `make` antes de compilar.
 
 ```sh
 make -C ps2
