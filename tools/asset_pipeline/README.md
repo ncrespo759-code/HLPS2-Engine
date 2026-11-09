@@ -67,3 +67,19 @@ python3 tools/asset_pipeline/vtf_to_hlps2.py --self-test
 
 This converter is the first texture-format milestone, not proof that a texture
 from the SandstoneMod pack has been imported or displayed on the PS2 yet.
+
+
+## First model inspection step
+
+`inspect_idst.py` validates the common Source `IDST` MDL header and reports
+its version, checksum, model name and declared file length. It also lists the
+matching `.vvd` and `.dx90.vtx` companion filenames to look for.
+
+```sh
+python3 tools/asset_pipeline/inspect_idst.py path/to/model.mdl --json
+python3 tools/asset_pipeline/inspect_idst.py --self-test
+```
+
+This is header validation only. It does not claim to convert or render the
+model; mesh decoding and PS2-friendly reduction follow after the exact model
+and its companion files are identified.
