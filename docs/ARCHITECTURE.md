@@ -27,3 +27,9 @@ Source assets are not runtime-ready for PS2. Host tools should inspect inputs an
 - Audio: resample and encode to a format supported by the chosen IOP playback path.
 
 Conversion must be deterministic and report unsupported features instead of silently dropping them.
+
+## Verified bootstrap milestones
+
+- EE/PS2SDK startup and native GS framebuffer/debug output were verified in PCSX2.
+- A CPU-side 3D cube test was also confirmed by the user in PCSX2: it rotates and changes face colors. This validates the basic EE transform/projection plus GIF/DMA-to-GS path; it is not yet a production renderer.
+- The next renderer milestone is a small, isolated VU1 microprogram test. Keep the working CPU cube as a fallback/reference and do not replace it until the VU1 test builds and is independently verified.
