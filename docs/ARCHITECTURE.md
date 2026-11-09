@@ -33,3 +33,12 @@ Conversion must be deterministic and report unsupported features instead of sile
 - EE/PS2SDK startup and native GS framebuffer/debug output were verified in PCSX2.
 - A CPU-side 3D cube test was also confirmed by the user in PCSX2: it rotates and changes face colors. This validates the basic EE transform/projection plus GIF/DMA-to-GS path; it is not yet a production renderer.
 - The next renderer milestone is a small, isolated VU1 microprogram test. Keep the working CPU cube as a fallback/reference and do not replace it until the VU1 test builds and is independently verified.
+
+## VU1 bring-up status
+
+The first VU1 milestone adds a minimal, terminating microprogram and links its
+`.vudata` symbols into the ELF. CI must locate `dvp-as` from
+`$PS2DEV/dvp/bin` and assemble the program. This milestone verifies the
+assembler/linker path only: the microprogram is intentionally not executed and
+does not yet transform vertices or submit geometry to the GS. Runtime VIF1
+upload/execution and a visible VU1-rendered primitive remain separate milestones.
