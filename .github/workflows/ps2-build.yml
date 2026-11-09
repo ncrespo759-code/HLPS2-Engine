@@ -47,6 +47,12 @@ jobs:
       - name: Verify isolated VU1 ELF
         run: test -s ps2/hlps2-vu1-test.elf
 
+      - name: Build isolated VU1 to GS triangle test ELF
+        run: make -C ps2 vu1-triangle-test
+
+      - name: Verify VU1 triangle test ELF
+        run: test -s ps2/hlps2-vu1-triangle-test.elf
+
       - name: Publish PS2 ELFs
         uses: actions/upload-artifact@v4
         with:
@@ -54,4 +60,5 @@ jobs:
           path: |
             ps2/hlps2.elf
             ps2/hlps2-vu1-test.elf
+            ps2/hlps2-vu1-triangle-test.elf
           if-no-files-found: error
