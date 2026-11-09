@@ -1,0 +1,15 @@
+/*
+ * First VU1 -> GS bridge test.
+ * EE uploads a prebuilt GIF packet to VU1 data memory; VU1 sends it
+ * to the GS with XGKICK. Vertex transformation is a later test.
+ */
+    .global hlps2_vu1_triangle_CodeStart
+    .global hlps2_vu1_triangle_CodeEnd
+
+    .p2align 8
+hlps2_vu1_triangle_CodeStart:
+    .vu
+    nop             xgkick      VI00
+    nop[E]          nop
+
+hlps2_vu1_triangle_CodeEnd:
