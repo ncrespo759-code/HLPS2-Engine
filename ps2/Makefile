@@ -1,9 +1,9 @@
 EE_BIN = hlps2.elf
-EE_OBJS = src/main.o
+DVP_AS ?= dvp-as\nEE_OBJS = src/main.o src/vu1_probe.o
 EE_CFLAGS += -O2 -G0 -Wall -Wextra -Iinclude
 EE_LIBS += -ldebug -ldraw -lgraph -ldma -lpacket -lm
 
-.PHONY: all clean
+src/vu1_probe.o: src/vu1_probe.vsm\n\t$(DVP_AS) -o $@ $<\n\n.PHONY: all clean
 all: $(EE_BIN)
 
 clean:
