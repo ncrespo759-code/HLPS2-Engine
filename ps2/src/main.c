@@ -1,4 +1,5 @@
 #include <kernel.h>
+#include <debug.h>
 #include <tamtypes.h>
 
 #include <dma.h>
