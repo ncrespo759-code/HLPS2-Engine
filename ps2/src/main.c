@@ -12,7 +12,6 @@
 #include <draw.h>
 
 extern u32 hlps2_vu1_probe_size(void);
-extern int hlps2_vu1_execute_probe(void);
 
 #define SCREEN_W 640
 #define SCREEN_H 448
@@ -226,12 +225,6 @@ int main(void)
     scr_printf("HLPS2-Engine: native EE 3D cube test\n");
     scr_printf("VU1 microcode linked: %u bytes\\n",
                hlps2_vu1_probe_size());
-
-    {
-        int vu1_result = hlps2_vu1_execute_probe();
-        scr_printf("VU1 execution probe: %s (%d)\\n",
-                   vu1_result == 0 ? "completed" : "FAILED", vu1_result);
-    }
 
     dma_channel_initialize(DMA_CHANNEL_GIF, 0, 0);
     dma_channel_fast_waits(DMA_CHANNEL_GIF);
