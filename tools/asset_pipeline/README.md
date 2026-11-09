@@ -44,3 +44,26 @@ Initial conversion targets:
 ## Platform boundary
 
 The supplied SandstoneMod archive is a PSP game package, not a PS2 port or a Half-Life 2 engine source tree. Its PSP executable/module files (`EBOOT.PBP`, `*.prx`) are not usable as PS2 executables. Its Source-format assets may be useful after validation and conversion. No proprietary game assets or PSP engine binaries are copied into this repository.
+
+
+## First PS2 texture conversion step
+
+`vtf_to_hlps2.py` converts a deliberately limited, validated subset of VTF
+textures into the host-side `H2TX` container:
+
+- VTF 7.0-7.2, one frame, one 2D image (no cubemaps or volume textures).
+- RGBA8888, ABGR8888, RGB888, BGR888, BGRA8888 and DXT1 source pixels.
+- Output pixels are linear little-endian RGBA5551 (GS PSMCT16), with a
+  20-byte `H2TX` header. The PS2 runtime upload path is a separate task.
+- Unsupported formats/layouts fail with an explicit error; the source file
+  is never modified.
+
+Run:
+
+```sh
+python3 tools/asset_pipeline/vtf_to_hlps2.py input.vtf output.h2tx
+python3 tools/asset_pipeline/vtf_to_hlps2.py --self-test
+```
+
+This converter is the first texture-format milestone, not proof that a texture
+from the SandstoneMod pack has been imported or displayed on the PS2 yet.
