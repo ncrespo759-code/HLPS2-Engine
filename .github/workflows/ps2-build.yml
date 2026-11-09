@@ -1,0 +1,33 @@
+name: PS2 build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ps2dev/ps2dev:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify PS2 toolchain
+        run: |
+          test -n "$PS2SDK"
+          command -v ee-gcc
+          command -v make
+          test -f "$PS2SDK/samples/Makefile.eeglobal"
+
+      - name: Build bootstrap ELF
+        run: make -C ps2 clean all
+
+      - name: Publish ELF
+        uses: actions/upload-artifact@v4
+        with:
+          name: hlps2-bootstrap-elf
+          path: ps2/hlps2.elf
+          if-no-files-found: error
