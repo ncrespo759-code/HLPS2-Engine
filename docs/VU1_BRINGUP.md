@@ -23,10 +23,10 @@ The runtime path should be implemented in isolated stages:
 
 ## VIF commands relevant to this path
 
-- `MPG` (`0x4A)): uploads microinstructions to VU micro-memory.
+- `MPG` (`0x4A`): uploads microinstructions to VU micro-memory.
 - `UNPACK` (command family `0x60+`): transfers vertex/input data to VU data memory.
-- `MSCAL` (`0x14)): starts a microprogram at the specified instruction address.
-- `FLUSHE` (`0x10)): waits for VU execution to finish.
+- `MSCAL` (`0x14`): starts a microprogram at the specified instruction address.
+- `FLUSHE` (`0x10`): waits for VU execution to finish.
 - `FLUSH` (`0x11`): additionally waits for PATH1/PATH2 transfers to finish.
 - `FLUSHA` (`0x13`): stronger VIF1 synchronization, including pending PATH3 requests.
 
