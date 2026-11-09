@@ -8,4 +8,6 @@ all: $(EE_BIN)
 clean:
 	$(RM) $(EE_BIN) $(EE_OBJS)
 
+# Define EE_CC, EE_LD and the rest of the PS2 toolchain commands.
+include $(PS2SDK)/Defs.make
 include $(PS2SDK)/samples/Makefile.eeglobal
