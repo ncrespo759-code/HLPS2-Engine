@@ -222,8 +222,9 @@ int main(void)
     float angle = 0.0f;
 
     init_scr();
-    scr_printf("HLPS2-Engine: native EE 3D cube test\\n");
-    scr_printf("VU1 microcode linked: %u bytes (not executed yet)\\n",\n               hlps2_vu1_probe_size());
+    scr_printf("HLPS2-Engine: native EE 3D cube test\n");
+    scr_printf("VU1 microcode linked: %u bytes (not executed yet)\n",
+               hlps2_vu1_probe_size());
 
     dma_channel_initialize(DMA_CHANNEL_GIF, 0, 0);
     dma_channel_fast_waits(DMA_CHANNEL_GIF);
