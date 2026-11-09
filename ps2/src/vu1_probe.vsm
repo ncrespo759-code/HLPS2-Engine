@@ -1,0 +1,13 @@
+/*
+ * Minimal VU1 microprogram used to verify the DVP assembler and .vudata
+ * link path. It deliberately performs no rendering yet.
+ */
+    .global hlps2_vu1_probe_CodeStart
+    .global hlps2_vu1_probe_CodeEnd
+
+hlps2_vu1_probe_CodeStart:
+    .p2align 8
+    .vu
+    nop[E] nop
+
+hlps2_vu1_probe_CodeEnd:
