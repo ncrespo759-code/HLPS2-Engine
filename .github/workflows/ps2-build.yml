@@ -44,6 +44,9 @@ jobs:
       - name: Test Source asset pack inventory
         run: python3 tools/asset_pipeline/scan_source_assets.py --self-test
 
+      - name: Test Source and GoldSrc BSP header inspector
+        run: python3 tools/asset_pipeline/inspect_bsp.py --self-test
+
       - name: Build stable EE cube ELF
         run: make -C ps2 clean all
 
