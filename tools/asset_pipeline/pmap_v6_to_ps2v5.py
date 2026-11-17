@@ -289,6 +289,9 @@ def convert_bytes(data: bytes):
     require_size(info, 96, "INFO")
     if info["count"] != 1:
         raise FormatError("INFO must contain exactly one record")
+    tier = struct.unpack_from("<I", info["data"], 0)[0]
+    if tier != 0:
+        raise FormatError("PS2 32 MB export requires the low-detail PMAP tier (INFO.tier = 0)")
     pvs_words = struct.unpack_from("<I", info["data"], 4)[0]
     sprp_words = struct.unpack_from("<I", info["data"], 76)[0]
 
@@ -434,6 +437,18 @@ def self_test():
     assert struct.unpack_from("<I", out_tex, 8)[0] == out_offsets[b"TXDT"]
     assert struct.unpack_from("<I", out_tex, 12)[0] == out_offsets[b"TXDT"] + 16
     assert stats["output_bytes"] == len(converted)
+
+    high_tier = [dict(section) for section in sections]
+    high_info = bytearray(by_id(high_tier, b"INFO")["data"])
+    struct.pack_into("<I", high_info, 0, 1)
+    by_id(high_tier, b"INFO")["data"] = bytes(high_info)
+    high_map, _ = _pack_sections(high_tier)
+    try:
+        convert_bytes(high_map)
+    except FormatError as exc:
+        assert "low-detail PMAP tier" in str(exc)
+    else:
+        raise AssertionError("high-detail PMAP was accepted for the 32 MB PS2 target")
 
     bad_rows = [dict(section) for section in sections]
     bad_rows[10] = dict(bad_rows[10])
