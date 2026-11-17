@@ -51,7 +51,7 @@ python3 tools/asset_pipeline/pmap_v6_to_ps2v5.py input.pmap output.ps2v5.pmap
 python3 tools/asset_pipeline/pmap_v6_to_ps2v5.py --self-test
 ~~~
 
-The exporter is map-only. It expands compressed PVSZ/SPVZ visibility rows into PVS/SPVS, expands v6 box-bevel collision bounds into six explicit bevel planes, and relocates absolute texture offsets if the TXDT section moves. It refuses v6-only locked-door flags, newer entity output/input IDs, and static props parented to entities rather than silently dropping those behaviours.
+The exporter is map-only. It expands compressed PVSZ/SPVZ visibility rows into PVS/SPVS, expands v6 box-bevel collision bounds into six explicit bevel planes, and relocates absolute texture offsets if the TXDT section moves. It refuses v6-only locked-door flags, newer entity output/input IDs, and static props parented to entities rather than silently dropping those behaviours. It requires the low-detail tier (INFO.tier = 0), matching the PS2 32 MB target.
 
 It does not parse BSP files, convert PPAK/PNPC/PSND packs, or load a map in the PS2 engine. BSP conversion still requires the user's own compatible game installation and assets. No real map has yet been converted or booted with this exporter; its synthetic self-test is the current validation target. The exporter is a compatibility bridge for the PS2-GMOD v5 layout, not a decision that HLPS2-Engine must permanently use that legacy runtime format.
 
