@@ -95,6 +95,22 @@ tools/asset_pipeline/inspect_bsp.py inspecciona solo la cabecera:
 
 No descomprime lumps ni convierte mapas. No puede determinar si un VBSP procede de Half-Life: Source: eso se confirma por la instalación/ruta y sus gameinfo.txt, no por la firma sola.
 
+
+## Progreso posterior: exportador de compatibilidad PMAP
+
+Se añadió tools/asset_pipeline/pmap_v6_to_ps2v5.py como adaptador host-side experimental entre el PMAP v6 que escribe el conversor actual y el PMAP v5 estricto que exige PS2-GMOD 1.3.0.
+
+El adaptador:
+- decodifica las filas RLE de PVSZ y SPVZ a las secciones PVS y SPVS sin cambiar el orden de clusters;
+- expande los seis límites de cada brush con BOX_BEVELS a seis planos axiales explícitos y marca sus índices con PMAP_SIDE_BEVEL;
+- reconstruye BSID y PLAN y actualiza los índices de cada brush;
+- recalcula los offsets absolutos de texturas dentro de TXDT si el crecimiento de PLAN mueve esa sección;
+- rechaza puertas bloqueadas, salidas/entradas nuevas y props estáticos parentados que el runtime v5 no puede representar fielmente.
+
+La conversión es deliberadamente estricta: si el mapa necesita una función v6 no disponible en v5, falla con un mensaje en vez de producir un mapa que parezca válido pero pierda comportamiento. El exportador no convierte BSP directamente, no convierte los packs PPAK/PNPC/PSND y no añade contenido de juegos al repositorio.
+
+El self-test sintético cubre visibilidad comprimida, expansión de bevels, índices, relocación de TXDT y rechazo de semántica incompatible. El workflow de CI ahora ejecuta ese self-test. Hasta que la ejecución termine, no se considera validado. Aún no se ha procesado un BSP real de Half-Life: Source ni se ha cargado el PMAP resultante en PCSX2 o hardware.
+
 ## Siguiente paso técnico
 
 Obtener un BSP real de Half-Life: Source desde una instalación legítima, ejecutar inspect_bsp.py y después preparar un test de conversión host-side que genere un reporte de geometría/materiales sin escribir todavía un PMAP para PS2. Con ese resultado, diseñar el exportador PS2 versionado y agregar pruebas de ida y vuelta para su encabezado/secciones.
