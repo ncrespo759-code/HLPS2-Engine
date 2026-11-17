@@ -36,14 +36,14 @@ def align(value: int) -> int:
     return (value + ALIGNMENT - 1) & ~(ALIGNMENT - 1)
 
 
-def parse_container(data: bytes):
+def parse_container(data: bytes, expected_version=INPUT_VERSION, required=REQUIRED):
     if len(data) < 16:
         raise FormatError("truncated PMAP header")
     magic, version, count, _reserved = struct.unpack_from("<4sIII", data, 0)
     if magic != MAGIC:
         raise FormatError("input is not a PMAP file")
-    if version != INPUT_VERSION:
-        raise FormatError(f"expected PMAP v{INPUT_VERSION}, found v{version}")
+    if version != expected_version:
+        raise FormatError(f"expected PMAP v{expected_version}, found v{version}")
     table_end = 16 + count * 16
     if table_end > len(data):
         raise FormatError("section table extends beyond end of file")
@@ -68,7 +68,7 @@ def parse_container(data: bytes):
     for previous, current in zip(ranges, ranges[1:]):
         if current[0] < previous[1]:
             raise FormatError(f"sections {previous[2]!r} and {current[2]!r} overlap")
-    missing = [sid.decode("ascii", "replace") for sid in REQUIRED if sid not in seen]
+    missing = [sid.decode("ascii", "replace") for sid in required if sid not in seen]
     if missing:
         raise FormatError("missing runtime sections: " + ", ".join(missing))
     return sections
@@ -155,6 +155,7 @@ def validate_v5_semantics(sections):
 
 
 def expand_box_bevels(sections):
+    expanded = 0
     brushes = by_id(sections, b"BRSH")
     sides = by_id(sections, b"BSID")
     planes = by_id(sections, b"PLAN")
@@ -194,6 +195,7 @@ def expand_box_bevels(sections):
         new_count = real_count
 
         if boxed:
+            expanded += 1
             bounds_offset = (first + real_count) * 4
             bounds = struct.unpack_from("<6f", sides["data"], bounds_offset)
             mins, maxs = bounds[:3], bounds[3:]
@@ -226,6 +228,7 @@ def expand_box_bevels(sections):
     sides["count"] = len(new_words)
     planes["data"] = bytes(new_planes)
     planes["count"] = plane_count
+    return expanded
 
 
 def layout_sections(sections):
@@ -308,7 +311,7 @@ def convert_bytes(data: bytes):
     pvsz["id"], pvsz["data"], pvsz["count"] = b"PVS ", pvs, pvsz["count"]
     spvsz["id"], spvsz["data"], spvsz["count"] = b"SPVS", spvs, spvsz["count"]
 
-    expand_box_bevels(sections)
+    expanded = expand_box_bevels(sections)
 
     # Layout once to learn where TXDT moved after PLAN/BSID expansion, then fix
     # the absolute offsets stored in TEXS. TEXS itself keeps the same size.
@@ -321,10 +324,7 @@ def convert_bytes(data: bytes):
         "input_bytes": len(data),
         "output_bytes": len(output),
         "clusters": pvsz["count"],
-        "box_bevels_expanded": sum(
-            1 for index in range(by_id(sections, b"BRSH")["count"])
-            if False
-        ),
+        "box_bevels_expanded": expanded,
         "txdt_offset": offsets[b"TXDT"],
     }
 
@@ -376,7 +376,7 @@ def self_test():
     struct.pack_into("<I", info, 76, 1)
     original_plane = struct.pack("<4f", 0.0, 0.0, 1.0, 0.0)
     bounds = struct.pack("<6f", -1.0, -2.0, -3.0, 1.0, 2.0, 3.0)
-    texture = struct.pack("<HHBBHI5I", 4, 4, 1, 0, 0, 0, 16, 0, 0, 0)
+    texture = struct.pack("<HHBBHI5I", 4, 4, 1, 0, 0, 0, 16, 0, 0, 0, 0)
     static_prop = bytes(64)
     rows = [bytes((0, 0, 1, 255)), bytes((0, 0, 1, 255))]
     sections = [
@@ -413,7 +413,7 @@ def self_test():
     source, source_offsets = _pack_sections(sections)
 
     converted, stats = convert_bytes(source)
-    output_sections = parse_container(converted)
+    output_sections = parse_container(converted, OUTPUT_VERSION, required=())
     ids = {section["id"] for section in output_sections}
     assert struct.unpack_from("<I", converted, 4)[0] == OUTPUT_VERSION
     assert b"PVS " in ids and b"SPVS" in ids
