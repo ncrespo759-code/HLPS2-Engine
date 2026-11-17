@@ -105,6 +105,7 @@ El adaptador:
 - expande los seis límites de cada brush con BOX_BEVELS a seis planos axiales explícitos y marca sus índices con PMAP_SIDE_BEVEL;
 - reconstruye BSID y PLAN y actualiza los índices de cada brush;
 - recalcula los offsets absolutos de texturas dentro de TXDT si el crecimiento de PLAN mueve esa sección;
+- exige el tier low (INFO.tier = 0), destinado al límite de 32 MB de PS2;
 - rechaza puertas bloqueadas, salidas/entradas nuevas y props estáticos parentados que el runtime v5 no puede representar fielmente.
 
 La conversión es deliberadamente estricta: si el mapa necesita una función v6 no disponible en v5, falla con un mensaje en vez de producir un mapa que parezca válido pero pierda comportamiento. El exportador no convierte BSP directamente, no convierte los packs PPAK/PNPC/PSND y no añade contenido de juegos al repositorio.
