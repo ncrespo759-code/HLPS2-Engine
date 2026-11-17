@@ -42,6 +42,19 @@ Half-Life: Source is a Source 1 game, so its maps should use the Source VBSP pat
 
 This is a header/range inspector, not a BSP geometry parser or converter. See `docs/BSPCONV_PORT_PLAN.md` for the audit of the reference converter and the PMAP v5/v6 incompatibility.
 
+## PMAP v6 to PS2-GMOD v5 compatibility export
+
+After a map has been converted on PC by the reference tools/bspconv into a PMAP v6 file, the compatibility exporter can produce a PMAP v5 map for the older PS2-GMOD runtime:
+
+~~~sh
+python3 tools/asset_pipeline/pmap_v6_to_ps2v5.py input.pmap output.ps2v5.pmap
+python3 tools/asset_pipeline/pmap_v6_to_ps2v5.py --self-test
+~~~
+
+The exporter is map-only. It expands compressed PVSZ/SPVZ visibility rows into PVS/SPVS, expands v6 box-bevel collision bounds into six explicit bevel planes, and relocates absolute texture offsets if the TXDT section moves. It refuses v6-only locked-door flags, newer entity output/input IDs, and static props parented to entities rather than silently dropping those behaviours.
+
+It does not parse BSP files, convert PPAK/PNPC/PSND packs, or load a map in the PS2 engine. BSP conversion still requires the user's own compatible game installation and assets. No real map has yet been converted or booted with this exporter; its synthetic self-test is the current validation target. The exporter is a compatibility bridge for the PS2-GMOD v5 layout, not a decision that HLPS2-Engine must permanently use that legacy runtime format.
+
 ## Conversion pipeline
 
 The intended workflow is:
