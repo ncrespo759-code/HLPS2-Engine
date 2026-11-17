@@ -26,6 +26,7 @@ La ejecución 63 de GitHub Actions pasó el 9 de noviembre de 2026 y compiló lo
 
 - [retcon26/PS2-GMOD](https://github.com/retcon26/PS2-GMOD): referencia principal para arquitectura PS2, carga de mapas, memoria, input DualShock 2, audio IOP, filesystem de disco y renderizado con VU1. Su implementación actual usa una capa compatible con PSP-GU sobre gsKit; se estudia como referencia, no se copia automáticamente.
 - [retcon26/retcons-mod](https://github.com/retcon26/retcons-mod): referencia principal para el conversor host-side de mapas Source/GoldSrc, modelos MDL/VVD/VTX, materiales VMT/VTF, colisión, props y NPCs. El conversor actual genera PMAP v6, por lo que no es compatible directamente con el runtime PS2-GMOD antiguo que exige PMAP v5.
+- [Auditoría de plataforma PS2](docs/PS2_PLATFORM_AUDIT.md): revisión de renderer GS/VU1, memoria de 32 MB, audio IOP, input DualShock 2, filesystem y build de referencia.
 
 Los repositorios de referencia no muestran una licencia declarada en sus metadatos ni un archivo LICENSE en sus árboles actuales. Por eso este proyecto documenta los formatos y desarrolla adaptadores independientes; no copia archivos de código de esos repositorios sin autorización/licencia compatible.
 
