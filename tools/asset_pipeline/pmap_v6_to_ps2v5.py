@@ -379,20 +379,20 @@ def self_test():
     struct.pack_into("<I", info, 76, 1)
     original_plane = struct.pack("<4f", 0.0, 0.0, 1.0, 0.0)
     bounds = struct.pack("<6f", -1.0, -2.0, -3.0, 1.0, 2.0, 3.0)
-    texture = struct.pack("<HHBBHI5I", 4, 4, 1, 0, 0, 0, 16, 0, 0, 0, 0)
+    texture = struct.pack("<HHBBHI5I", 8, 8, 1, 0, 0, 0, 1024, 0, 0, 0, 0)
     static_prop = bytes(64)
     rows = [bytes((0, 0, 1, 255)), bytes((0, 0, 1, 255))]
     sections = [
         {"id": b"INFO", "data": bytes(info), "count": 1},
         {"id": b"PLAN", "data": original_plane, "count": 1},
         {"id": b"TEXS", "data": texture, "count": 1},
-        {"id": b"TXDT", "data": bytes(range(64)), "count": 64},
+        {"id": b"TXDT", "data": bytes(1088), "count": 1088},
         {"id": b"SPWN", "data": bytes(16), "count": 1},
         {"id": b"VERT", "data": b"", "count": 0},
         {"id": b"INDX", "data": b"", "count": 0},
         {"id": b"BTCH", "data": b"", "count": 0},
         {"id": b"NODE", "data": b"", "count": 0},
-        {"id": b"LEAF", "data": b"", "count": 0},
+        {"id": b"LEAF", "data": struct.pack("<iIIIII", 0, 0, 0, 0, 0, 0), "count": 1},
         {"id": b"PVSZ", "data": _encode_rows(rows), "count": 2},
         {"id": b"BRSH", "data": struct.pack("<III", 0, BOX_BEVELS | 1, 1), "count": 1},
         {"id": b"BSID", "data": struct.pack("<I", 0) + bounds, "count": 1},
@@ -411,11 +411,14 @@ def self_test():
     source, source_offsets = _pack_sections(sections)
     texture = bytearray(sections[2]["data"])
     struct.pack_into("<I", texture, 8, source_offsets[b"TXDT"])
-    struct.pack_into("<I", texture, 12, source_offsets[b"TXDT"] + 16)
+    struct.pack_into("<I", texture, 12, source_offsets[b"TXDT"] + 1024)
     sections[2]["data"] = bytes(texture)
     source, source_offsets = _pack_sections(sections)
 
     converted, stats = convert_bytes(source)
+    from validate_ps2_pmap_v5 import validate_bytes as validate_ps2_pmap_v5
+    validation = validate_ps2_pmap_v5(converted)
+    assert validation["clusters"] == 2 and validation["brushes"] == 1
     output_sections = parse_container(converted, OUTPUT_VERSION, required=())
     ids = {section["id"] for section in output_sections}
     assert struct.unpack_from("<I", converted, 4)[0] == OUTPUT_VERSION
@@ -435,7 +438,7 @@ def self_test():
     assert out_offsets[b"TXDT"] == source_offsets[b"TXDT"] + 96
     out_tex = by_id(output_sections, b"TEXS")["data"]
     assert struct.unpack_from("<I", out_tex, 8)[0] == out_offsets[b"TXDT"]
-    assert struct.unpack_from("<I", out_tex, 12)[0] == out_offsets[b"TXDT"] + 16
+    assert struct.unpack_from("<I", out_tex, 12)[0] == out_offsets[b"TXDT"] + 1024
     assert stats["output_bytes"] == len(converted)
 
     high_tier = [dict(section) for section in sections]
