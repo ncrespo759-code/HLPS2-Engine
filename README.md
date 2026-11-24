@@ -18,9 +18,9 @@ Estas son metas, no funciones ya implementadas.
 - El ELF estable dibuja un cubo 3D rotatorio con transformaciones en EE/CPU.
 - Hay pruebas separadas de carga VU1 y de envío VU1 → GS mediante XGKICK. La prueba del triángulo todavía recibe del EE el paquete GS ya construido: **no demuestra transformación de vértices en VU1**.
 - Todavía no hay cargador de mapas, motor de físicas sandbox, sistema de props, NPCs, audio ni multijugador jugable.
-- El pipeline host-side ya inspecciona inventarios de modelos Source y convierte un subconjunto de VTF; la conversión BSP para PS2 está pendiente.
+- El pipeline host-side inspecciona Source VBSP v19–v21 y GoldSrc BSP v30, y contiene un adaptador experimental PMAP v6→v5 más un validador estructural del formato v5. **No se ha convertido todavía un mapa real ni se ha cargado un PMAP en PCSX2 o en una PS2.**
 
-La ejecución 63 de GitHub Actions pasó el 9 de noviembre de 2026 y compiló los tres ELF de prueba. Eso valida la compilación, no el arranque de un sandbox completo en una PS2 real.
+La ejecución 74 de GitHub Actions pasó el 24 de noviembre de 2026: self-tests del inspector BSP y de ambos adaptadores/validadores, además de la compilación de los tres ELF de diagnóstico. Eso valida pruebas sintéticas y compilación, no el arranque de un sandbox completo en PCSX2 o una PS2 real.
 
 ## Referencias técnicas
 
