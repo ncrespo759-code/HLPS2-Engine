@@ -49,6 +49,9 @@ jobs:
       - name: Test PMAP v6 to PS2 v5 compatibility exporter
         run: python3 tools/asset_pipeline/pmap_v6_to_ps2v5.py --self-test
 
+      - name: Validate PS2-GMOD PMAP v5 runtime invariants
+        run: python3 tools/asset_pipeline/validate_ps2_pmap_v5.py --self-test
+
       - name: Build stable EE cube ELF
         run: make -C ps2 clean all
 
