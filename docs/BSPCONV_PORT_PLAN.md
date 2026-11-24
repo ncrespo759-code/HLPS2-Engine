@@ -1,6 +1,7 @@
 # Auditoría del conversor BSP para el sandbox PS2
 
-**Fecha:** 10 de noviembre de 2026  
+**Fecha de revisión inicial:** 10 de noviembre de 2026  
+**Actualización:** 24 de noviembre de 2026  
 **Objetivo:** determinar qué puede reutilizarse conceptualmente de tools/bspconv y qué falta para que los mapas lleguen a un runtime de PlayStation 2.
 
 ## Repositorios y revisiones inspeccionadas
@@ -115,3 +116,24 @@ El self-test sintético cubre visibilidad comprimida, expansión de bevels, índ
 ## Siguiente paso técnico
 
 Obtener un BSP real de Half-Life: Source desde una instalación legítima, ejecutar inspect_bsp.py y después preparar un test de conversión host-side que genere un reporte de geometría/materiales sin escribir todavía un PMAP para PS2. Con ese resultado, diseñar el exportador PS2 versionado y agregar pruebas de ida y vuelta para su encabezado/secciones.
+
+
+## Actualización 24-11-2026: validación estructural y compatibilidad de packs
+
+Se añadió `tools/asset_pipeline/validate_ps2_pmap_v5.py`. Contrasta el PMAP v5 exportado con las estructuras que consume el runtime PS2-GMOD:
+
+- cabecera, tabla de secciones, alineación de 16 bytes, rangos y solapamientos;
+- tamaños de registros y secciones PVS/SPVS según INFO;
+- offsets absolutos de CLUT y mipmaps dentro de TXDT;
+- índices de lotes, vértices, planos, nodos, hojas, brushes y listas de brushes;
+- límites de 64 planos por brush y referencias de entidades/salidas;
+- rechazo de campos v6 no representables en v5 (puertas bloqueadas, entradas/salidas nuevas y props parentados);
+- límite de tamaño y tier low para el objetivo de 32 MB.
+
+El runtime de referencia busca secciones por nombre y versión, pero no valida todos estos rangos antes de formar punteros. El validador nuevo es una comprobación host-side previa al empaquetado; no modifica el runtime y no sustituye una prueba de carga real.
+
+**Compatibilidad de modelos/props:** el bloqueo PMAP v6/v5 no debe confundirse con PPAK. El conversor actual declara `PPAK_VERSION = 1` y el runtime PS2 declara también `PPAK_VERSION 1`; por tanto, el formato de prop pack mantiene el mismo número de versión. Aun así, falta validar un PPAK real con modelos de la instalación del usuario. El lector de modelos del conversor requiere el conjunto Source Studio `.mdl + .vvd + .vtx` (y usa `.phy` si existe); no se encontró un lector equivalente de modelos GoldSrc MDL.
+
+**Estado de upstream al revisar:** PS2-GMOD declara versión 1.3.0. El README de retcons-mod declara versión 1.15.0 y aclara que el port PS2 antiguo dejó de recibir soporte desde la rama 1.8.0; el conversor actual es principalmente la ruta PSP. No se debe asumir que cualquier pack nuevo seguirá siendo compatible con PS2 solo porque el conversor aún genere algún archivo `.ps2`.
+
+**Validación CI:** GitHub Actions run #74 pasó el 24-11-2026. El nuevo paso `Validate PS2-GMOD PMAP v5 runtime invariants` terminó correctamente, igual que los self-tests previos y los tres builds ELF (EE cube, VU1 test y VU1→GS triangle). Todos los tests de formato son sintéticos: no hubo un BSP de Half-Life: Source ni un PMAP real disponible para esta ejecución.
