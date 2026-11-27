@@ -1,0 +1,43 @@
+name: HLPS2 PS2 Bootstrap
+
+on:
+  push:
+    branches: [ps2-engine-from-zero]
+    paths:
+      - 'engine/ps2/**'
+      - '.github/workflows/hlps2-ps2-bootstrap.yml'
+  pull_request:
+    paths:
+      - 'engine/ps2/**'
+      - '.github/workflows/hlps2-ps2-bootstrap.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-ps2:
+    runs-on: ubuntu-latest
+    container:
+      image: ps2dev/ps2dev:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install build utilities
+        run: apk add --no-cache make
+      - name: Verify PS2SDK toolchain
+        shell: sh
+        run: |
+          test -n "$PS2SDK"
+          command -v mips64r5900el-ps2-elf-gcc
+          test -f "$PS2SDK/samples/Makefile.eeglobal"
+      - name: Build clean EE bootstrap ELF
+        run: make -C engine/ps2 clean all
+      - name: Verify ELF output
+        run: test -s engine/ps2/hlps2-bootstrap.elf
+      - name: Publish PS2 ELF
+        uses: actions/upload-artifact@v4
+        with:
+          name: hlps2-native-bootstrap-elf
+          path: engine/ps2/hlps2-bootstrap.elf
+          if-no-files-found: error
