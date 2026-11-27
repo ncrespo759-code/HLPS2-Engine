@@ -1,0 +1,140 @@
+name: HLPS2 N64 reference analysis + PS2 build
+
+on:
+  workflow_dispatch:
+    inputs:
+      reference_ref:
+        description: "ToxyCola Half-Life N64 reference branch/tag"
+        required: false
+        default: "main"
+  push:
+    paths:
+      - ".github/workflows/hlps2-n64-reference.yml"
+      - "ps2/**"
+      - "tools/**"
+  pull_request:
+    paths:
+      - ".github/workflows/hlps2-n64-reference.yml"
+      - "ps2/**"
+      - "tools/**"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-build:
+    runs-on: ubuntu-latest
+    container:
+      image: ps2dev/ps2dev:latest
+    steps:
+      - name: Checkout HLPS2-Engine
+        uses: actions/checkout@v4
+        with:
+          path: HLPS2-Engine
+
+      - name: Checkout Nintendo 64 reference
+        uses: actions/checkout@v4
+        with:
+          repository: ToxyCola/Half-Life-Nintendo-64-Port
+          ref: ${{ inputs.reference_ref || 'main' }}
+          path: Half-Life-Nintendo-64-Port
+          persist-credentials: false
+
+      - name: Install utilities
+        run: apk add --no-cache make python3 git
+
+      - name: Configure PS2 toolchain
+        shell: sh
+        run: |
+          echo "$PS2DEV/ee/bin" >> "$GITHUB_PATH"
+          echo "$PS2DEV/dvp/bin" >> "$GITHUB_PATH"
+          echo "$PS2DEV/bin" >> "$GITHUB_PATH"
+          echo "$PS2SDK/bin" >> "$GITHUB_PATH"
+          test -n "$PS2SDK"
+          command -v mips64r5900el-ps2-elf-gcc
+          command -v dvp-as
+          command -v make
+
+      - name: Analyze portable reference concepts
+        working-directory: .
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          ref = Path("Half-Life-Nintendo-64-Port")
+          targets = [
+              "src/bsp.c", "src/render.c", "src/entities.c", "src/npc.c",
+              "src/pmove.c", "src/weapons.c", "tools/bs2bsp.py", "tools/ps2h2h.py",
+              "Makefile"
+          ]
+          report = [
+              "# N64 reference analysis for HLPS2",
+              "",
+              "This is a read-only reference audit. N64-specific LibDragon/Tiny3D code is not copied into PS2.",
+              "",
+              "| Reference file | Present | PS2 investigation area |",
+              "|---|---:|---|",
+          ]
+          areas = {
+              "src/bsp.c": "BSP loading, PVS, collision",
+              "src/render.c": "visibility, frustum culling, batching (redesign for EE/VU1/GS)",
+              "src/entities.c": "entity and trigger logic",
+              "src/npc.c": "NPC update logic",
+              "src/pmove.c": "player movement and collision",
+              "src/weapons.c": "weapon state and effects",
+              "tools/bs2bsp.py": "PS2 BS2 map conversion",
+              "tools/ps2h2h.py": "PS2 PAK/model extraction",
+              "Makefile": "N64-only build configuration; not reusable",
+          }
+          for item in targets:
+              present = (ref / item).is_file()
+              report.append(f"| `{item}` | {'yes' if present else 'no'} | {areas[item]} |")
+          report += [
+              "",
+              "## Safety boundary",
+              "- Do not import LibDragon, Tiny3D, RSP/RDP code or N64 compiler flags.",
+              "- Keep the existing PS2 renderer and stable ELF path unchanged.",
+              "- Port algorithms only after checking data structures, memory use and PS2SDK compatibility.",
+              "- Treat conversion tools as host-side candidates; test on user-owned game assets only.",
+              "",
+          ]
+          Path("reference-analysis.md").write_text("\n".join(report), encoding="utf-8")
+          missing = [p for p in targets if not (ref / p).is_file()]
+          print("Reference audit complete; missing:", json.dumps(missing))
+          PY
+
+      - name: Run existing asset converter self-tests
+        working-directory: HLPS2-Engine
+        run: |
+          python3 tools/asset_pipeline/vtf_to_hlps2.py --self-test
+          python3 tools/asset_pipeline/inspect_idst.py --self-test
+          python3 tools/asset_pipeline/scan_source_assets.py --self-test
+
+      - name: Build stable PS2 ELF
+        working-directory: HLPS2-Engine
+        run: make -C ps2 clean all
+
+      - name: Build isolated VU1 tests
+        working-directory: HLPS2-Engine
+        run: |
+          make -C ps2 vu1-test
+          make -C ps2 vu1-triangle-test
+
+      - name: Verify outputs
+        working-directory: HLPS2-Engine
+        run: |
+          test -s ps2/hlps2.elf
+          test -s ps2/hlps2-vu1-test.elf
+          test -s ps2/hlps2-vu1-triangle-test.elf
+          file ps2/hlps2.elf ps2/hlps2-vu1-test.elf ps2/hlps2-vu1-triangle-test.elf
+
+      - name: Upload report and PS2 ELFs
+        uses: actions/upload-artifact@v4
+        with:
+          name: hlps2-n64-reference-analysis-and-ps2-elfs
+          if-no-files-found: error
+          path: |
+            reference-analysis.md
+            HLPS2-Engine/ps2/hlps2.elf
+            HLPS2-Engine/ps2/hlps2-vu1-test.elf
+            HLPS2-Engine/ps2/hlps2-vu1-triangle-test.elf
