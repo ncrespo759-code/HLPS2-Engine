@@ -41,7 +41,7 @@ jobs:
           persist-credentials: false
 
       - name: Install utilities
-        run: apk add --no-cache make python3 git
+        run: apk add --no-cache make python3 git file
 
       - name: Configure PS2 toolchain
         shell: sh
